@@ -2,10 +2,16 @@
 # vi: set ft=ruby :
 
 $script = <<SCRIPT
+
+sudo ex +"%s@DPkg@//DPkg" -cwq /etc/apt/apt.conf.d/70debconf
+sudo dpkg-reconfigure debconf -f noninteractive -p critical
+echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections > /dev/null
+echo 'printf \"\\n\"' | sudo tee -a /etc/update-motd.d/00-header > /dev/null
+echo 'exec neofetch' | sudo tee -a /etc/update-motd.d/00-header > /dev/null
+
 sudo apt-get update
-echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-# Packages required for nomad & consul
 sudo apt-get install neofetch -y
+
 for bin in cfssl cfssl-certinfo cfssljson
 do
   echo "Installing $bin..."
@@ -19,6 +25,7 @@ Vagrant.configure(2) do |config|
   config.vm.box = "bento/ubuntu-18.04" # 18.04 LTS
   config.vm.hostname = "dummy"
   config.vm.provision "shell", inline: $script, privileged: false
+
   # Expose the api to the host
   # config.vm.network "forwarded_port", guest: 8080, host: 8080, auto_correct: true, host_ip: "127.0.0.1"
 
