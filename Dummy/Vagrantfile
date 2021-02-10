@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+sudo apt-get update
+echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+# Packages required for nomad & consul
+sudo apt-get install neofetch -y
+for bin in cfssl cfssl-certinfo cfssljson
+do
+  echo "Installing $bin..."
+  curl -sSL https://pkg.cfssl.org/R1.2/${bin}_linux-amd64 > /tmp/${bin}
+  sudo install /tmp/${bin} /usr/local/bin/${bin}
+done
+
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "bento/ubuntu-18.04" # 18.04 LTS
+  config.vm.hostname = "dummy"
+  config.vm.provision "shell", inline: $script, privileged: false
+  # Expose the api to the host
+  # config.vm.network "forwarded_port", guest: 8080, host: 8080, auto_correct: true, host_ip: "127.0.0.1"
+
+  ["vmware_fusion"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "2048"
+    end
+  end
+end
